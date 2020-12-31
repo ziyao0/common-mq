@@ -2,6 +2,7 @@
 
 - [更新日志](#更新日志)
 - [《MQ集成》使用说明](#MQ集成)
+    - [配置本地hosts](#配置本地hosts)
     - [项目背景](#项目背景)
     - [集成环境说明](#集成环境说明)
     - [工程结构](#工程结构)
@@ -33,6 +34,12 @@
 | v1.1.0 | rocketmq单机环境搭建文档编写 | 2020/12/29 | 张子尧 |
 | v1.1.1 | rocketmq原生API案例 | 2020/12/30 | 张子尧 |
 | v1.1.2 | rocketmq集群环境搭建文档 | 2020/12/31 | 张子尧 |
+| v1.1.3 | 解决github图片不显示问题 | 2020/12/31 | 张子尧 |
+
+# 配置本地hosts
+
+github图片不显示可以添加一下host文件内容：
+[参考](resources/conf/hosts)windows hosts文件地址C:\Windows\System32\drivers\etc\hosts, linux /etc/hosts
 
 # 项目背景
 
