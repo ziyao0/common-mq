@@ -42,11 +42,11 @@
 
 # 集成环境说明
 
-|  | 版本 | 支持环境(单机/集群) | 安装文档 | 相关信息 |
-| -------- | ---------|-------|------------ | ----: |
-| rabbitmq | **3.8.5** | **ALL** | [rabbitmq环境搭建文档](doc/rabbitmq搭建文档.md) | ![](doc/images/folder_ico.png) &nbsp;&nbsp; [**安装包**](resources/install/rabbitmq)<br>[**配置文件**](resources/conf/rabbitmq)|
-| rocketmq | **4.7.1** | **ALL** | [rocketmq环境搭建文档](doc/rocketmq搭建文档.md) | ![](doc/images/folder_ico.png) &nbsp;&nbsp; [**安装包**](resources/install/rocketmq)<br>[**配置文件**](resources/conf/rocketmq) |
-| kafka | **4.4.1** | **ALL** | [kafka环境搭建文档](doc/kafka搭建文档.md) | ![](doc/images/folder_ico.png) &nbsp;&nbsp; [**安装包**](resources/install/kafka)<br>[**配置文件**](resources/conf/kafka) |
+|  | 版本 | 支持环境| 安装文档 | 相关信息 |
+| -------- | ---------|----|------------ | ------------: |
+| rabbitmq | **3.8.5** | single/cluster | [rabbitmq环境搭建文档](doc/rabbitmq搭建文档.md) | ![](doc/images/folder_ico.png) &nbsp;&nbsp; [**安装包**](resources/install/rabbitmq)<br>[**配置文件**](resources/conf/rabbitmq)|
+| rocketmq | **4.7.1** |single/cluster | [rocketmq环境搭建文档](doc/rocketmq搭建文档.md) | ![](doc/images/folder_ico.png) &nbsp;&nbsp; [**安装包**](resources/install/rocketmq)<br>[**配置文件**](resources/conf/rocketmq) |
+| kafka | **4.4.1** | single/cluster | [kafka环境搭建文档](doc/kafka搭建文档.md) | ![](doc/images/folder_ico.png) &nbsp;&nbsp; [**安装包**](resources/install/kafka)<br>[**配置文件**](resources/conf/kafka) |
 
 # 工程结构
 
@@ -301,8 +301,8 @@ rocketmq的前身是有kill me维护的Metamorphosis产品的扩展，后续到3
 - 支持发布(publish)/订阅(subscribe)，和点对点（p2p）的消息模型；
 - 支持顺序消费，利用了单个队列先进先出（FIFO）的特性实现消息的顺序消费，注意这里支持局部有序，也就是说只支持单个messagequeue中消息有序，无法做到全局有序；
 - 支持拉模式（pull）和推模式（push）两种消费模式。
-  - pull：消费者主动去broker上拉取消息，可以自己管理偏移量；
-  - push：设置消息监听器进行回调来消费消息；
+    - pull：消费者主动去broker上拉取消息，可以自己管理偏移量；
+    - push：设置消息监听器进行回调来消费消息；
 - 单一队列支持百万级别的消息积压能力；
 - 支持多种消息协议，比如jms，mqtt等；
 - 组概念，通过Group机制，让RocketMQ天然的支持消息负载均衡；
@@ -329,8 +329,6 @@ rocketmq的前身是有kill me维护的Metamorphosis产品的扩展，后续到3
 - message：Message 是消息的载体。一个 Message 必须指定 topic，相当于寄信的地址。Message 还有一个可选的 tag 设置，以便消费端可以基于 tag 进行过滤消息。也可以添加额外的键值对，例如你需要一个业务 key 来查找 broker 上的消息，方便在开发过程中诊断问题。
 
 - tag：标签可以被认为是对 Topic 进一步细化。一般在相同业务模块中通过引入标签来标记不同用途的消息。
-
-  
 
 ## rocketmq工作模式
 
@@ -366,26 +364,24 @@ rocket实现消息顺序消费的原理是利用了Queue的FIFO特性，把需�
 producer
 
 ```java
-SendResult sendResult = producer.send(message, (list, message, args) -> {
-                        //相同订单的消息放到同一个队列中 实现消息顺序消费
-                        Integer id = (Integer) args;
-                        return list.get(id % list.size());
-                    }, i);
+SendResult sendResult=producer.send(message,(list,message,args)->{
+        //相同订单的消息放到同一个队列中 实现消息顺序消费
+        Integer id=(Integer)args;
+        return list.get(id%list.size());
+        },i);
 ```
 
 consumer
 
 ```java
-consumer.registerMessageListener((MessageListenerOrderly) (list, consumeOrderlyContext) -> {
-                consumeOrderlyContext.setAutoCommit(true);
-                for (MessageExt messageExt : list) {
-                    log.info("本次消费消息为：{}", new String(messageExt.getBody()));
-                }
-                return ConsumeOrderlyStatus.SUCCESS;
-            });
+consumer.registerMessageListener((MessageListenerOrderly)(list,consumeOrderlyContext)->{
+        consumeOrderlyContext.setAutoCommit(true);
+        for(MessageExt messageExt:list){
+        log.info("本次消费消息为：{}",new String(messageExt.getBody()));
+        }
+        return ConsumeOrderlyStatus.SUCCESS;
+        });
 ```
-
-
 
 ### 延迟消息
 
@@ -394,9 +390,9 @@ rocketmq apache版延迟消息把延迟等级分为18个等级
 ![](doc/images/rocketmq延迟等级.png)
 
 ```java
-Message message = new Message("Delay", "tag", "延迟消息！！！".getBytes());
+Message message=new Message("Delay","tag","延迟消息！！！".getBytes());
 //messageDelayLevel=1s 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m 30m 1h 2h
-message.setDelayTimeLevel(3);
+        message.setDelayTimeLevel(3);
 ```
 
 ### 批量消息
@@ -418,8 +414,6 @@ message.setDelayTimeLevel(3);
  * 备注：只有推模式支持sql条件过滤
  */
 ```
-
-
 
 # Kafka使用
 
