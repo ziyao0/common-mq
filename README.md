@@ -2,7 +2,6 @@
 
 - [更新日志](#更新日志)
 - [《MQ集成》使用说明](#MQ集成)
-    - [配置本地hosts](#配置本地hosts)
     - [项目背景](#项目背景)
     - [集成环境说明](#集成环境说明)
     - [工程结构](#工程结构)
@@ -13,7 +12,10 @@
         - [rabbitmq确认机制](##rabbitmq确认机制)
         - [ttl+dlx实现延迟队列](##ttl+dlx实现延迟队列)
     - [RocketMQ使用](#RocketMQ使用)
-        - [rocketmq机构图](##rocketmq机构图)
+        - [发展历程](##发展历程)
+        - [rocketmq整体架构](##rocketmq整体架构)
+            - [rocketmq特性](###rocketmq特性)
+            - [rocketmq专业术语](###rocketmq专业术语)
         - [rocketmq工作模式](##rocketmq工作模式)
             - [基本消息](###基本消息)
             - [广播消息](###广播消息)
@@ -34,12 +36,7 @@
 | v1.1.0 | rocketmq单机环境搭建文档编写 | 2020/12/29 | 张子尧 |
 | v1.1.1 | rocketmq原生API案例 | 2020/12/30 | 张子尧 |
 | v1.1.2 | rocketmq集群环境搭建文档 | 2020/12/31 | 张子尧 |
-| v1.1.3 | 解决github图片不显示问题 | 2020/12/31 | 张子尧 |
-
-# 配置本地hosts
-
-github图片不显示可以添加一下host文件内容：
-[参考](resources/conf/hosts)windows hosts文件地址C:\Windows\System32\drivers\etc\hosts, linux /etc/hosts
+| v1.1.3 | 编写rocketmq使用文档 | 2020/12/31 | 张子尧 |
 
 # 项目背景
 
@@ -291,9 +288,49 @@ public class RabbitAdminConfig implements InitializingBean {
 
 # RocketMQ使用
 
-## rocketmq机构图
+rocketmq是一款纯java、分布式、队列模型的开源消息中间件、是一个低延迟、可扩展、高吞吐量的一款mq产品。支持事务消息、顺序消息、批量消息、定时消息、消息回溯等。
+
+## 发展历程
+
+rocketmq的前身是有kill me维护的Metamorphosis产品的扩展，后续到3.0发布后更名为rocketmq。
+
+## rocketmq整体架构
+
+### rocketmq特性
+
+- 支持发布(publish)/订阅(subscribe)，和点对点（p2p）的消息模型；
+- 支持顺序消费，利用了单个队列先进先出（FIFO）的特性实现消息的顺序消费，注意这里支持局部有序，也就是说只支持单个messagequeue中消息有序，无法做到全局有序；
+- 支持拉模式（pull）和推模式（push）两种消费模式。
+  - pull：消费者主动去broker上拉取消息，可以自己管理偏移量；
+  - push：设置消息监听器进行回调来消费消息；
+- 单一队列支持百万级别的消息积压能力；
+- 支持多种消息协议，比如jms，mqtt等；
+- 组概念，通过Group机制，让RocketMQ天然的支持消息负载均衡；
+- 消息失败重试机制、高效的订阅者水平扩展能力、强大的API、事务机制等等。
 
 ![](doc/images/rocketmq架构图.png)
+
+### rocketmq专业术语
+
+- nameserver：Name Server 为 producer 和 consumer 提供路由信息。
+
+- broker：Broker 是 RocketMQ 系统的主要角色，其实就是前面一直说的 MQ。Broker 接收来自生产者的消息，储存以及为消费者拉取消息的请求做好准备。
+
+- producer：消息生产者，生产者的作用就是将消息发送到 MQ，生产者本身既可以产生消息，如读取文本信息等。也可以对外提供接口，由外部应用来调用接口，再由生产者将收到的消息发送到 MQ
+
+- producer group：生产者组，简单来说就是多个发送同一类消息的生产者称之为一个生产者组。在这里可以不用关心，只要知道有这么一个概念即可。
+
+- consumer：消息消费者，简单来说，消费 MQ 上的消息的应用程序就是消费者，至于消息是否进行逻辑处理，还是直接存储到数据库等取决于业务需要。
+
+- consumer group：消费者组，和生产者类似，消费同一类消息的多个 consumer 实例组成一个消费者组。
+
+- topic：Topic 是一种消息的逻辑分类，比如说你有订单类的消息，也有库存类的消息，那么就需要进行分类，一个是订单 Topic 存放订单相关的消息，一个是库存 Topic 存储库存相关的消息，推荐一个系统使用一个topic。
+
+- message：Message 是消息的载体。一个 Message 必须指定 topic，相当于寄信的地址。Message 还有一个可选的 tag 设置，以便消费端可以基于 tag 进行过滤消息。也可以添加额外的键值对，例如你需要一个业务 key 来查找 broker 上的消息，方便在开发过程中诊断问题。
+
+- tag：标签可以被认为是对 Topic 进一步细化。一般在相同业务模块中通过引入标签来标记不同用途的消息。
+
+  
 
 ## rocketmq工作模式
 
@@ -313,12 +350,76 @@ public class RabbitAdminConfig implements InitializingBean {
 
 ### 广播消息
 
+rocketmq广播消息实现还是比较简单的，只需要指定消费者端的消费模型即可
+
+```java
+//messageModel有两种类型CLUSTERING集群模式，BROADCASTING广播模式（默认为集群）
+consumer.setMessageModel(MessageModel.BROADCASTING);
+```
+
 ### 顺序消息
+
+rocket实现消息顺序消费的原理是利用了Queue的FIFO特性，把需要保持顺序的消息放到同一个消息队列中来包保证消息的局部有序性
+
+<br>
+
+producer
+
+```java
+SendResult sendResult = producer.send(message, (list, message, args) -> {
+                        //相同订单的消息放到同一个队列中 实现消息顺序消费
+                        Integer id = (Integer) args;
+                        return list.get(id % list.size());
+                    }, i);
+```
+
+consumer
+
+```java
+consumer.registerMessageListener((MessageListenerOrderly) (list, consumeOrderlyContext) -> {
+                consumeOrderlyContext.setAutoCommit(true);
+                for (MessageExt messageExt : list) {
+                    log.info("本次消费消息为：{}", new String(messageExt.getBody()));
+                }
+                return ConsumeOrderlyStatus.SUCCESS;
+            });
+```
+
+
 
 ### 延迟消息
 
+rocketmq apache版延迟消息把延迟等级分为18个等级
+
+![](doc/images/rocketmq延迟等级.png)
+
+```java
+Message message = new Message("Delay", "tag", "延迟消息！！！".getBytes());
+//messageDelayLevel=1s 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m 30m 1h 2h
+message.setDelayTimeLevel(3);
+```
+
 ### 批量消息
+
+消息不能是延迟消息、事务消息等。消息大小不能超过4194304字节;
+
+消息分隔参考[MessageCutting](common-mq-basics/src/main/java/com/kiss/proto/rocketmq/batch/MessageCutting.java)
 
 ### 消息过滤
 
-### acl权限控制
+消息过滤：上推过滤条件到broker，减少磁盘io等
+
+```java
+/**
+ * 过滤模式
+ * 支持tag过滤
+ * 简单sql过滤：支持 OR,IN,AND,BETWEEN,IS NULL,IS NOT IN,>,<,=,<>等
+ * 常量支持类型：数值、字符（必须单引号）、null（特殊常量）、布尔值
+ * 备注：只有推模式支持sql条件过滤
+ */
+```
+
+
+
+# Kafka使用
+
