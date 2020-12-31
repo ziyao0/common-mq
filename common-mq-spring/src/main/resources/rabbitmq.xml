@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       https://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/rabbit
+       http://www.springframework.org/schema/rabbit/spring-rabbit.xsd">
+    <!--读取配置文件-->
+    <context:property-placeholder location="classpath:rabbitmq.properties"/>
+
+    <!--定义 rabbitmq 连接工厂-->
+    <rabbit:connection-factory id="connectionFactory"
+                               host="${rabbitmq.host}"
+                               port="${rabbitmq.port}"
+                               username="${rabbitmq.username}"
+                               password="${rabbitmq.password}"
+                               virtual-host="${rabbitmq.vhost}"
+                               publisher-confirms="true"
+                               publisher-returns="true"
+    />
+
+    <!--定义管理交换机、队列-->
+    <rabbit:admin connection-factory="connectionFactory"/>
+    <!--定义队列-->
+    <rabbit:queue name="queue" auto-declare="true"/>
+    <!--定义交换机 广播-->
+    <rabbit:fanout-exchange name="fanout" auto-declare="true" id="fanoutExchange">
+        <rabbit:bindings>
+            <rabbit:binding queue="queue"/>
+        </rabbit:bindings>
+    </rabbit:fanout-exchange>
+    <!--定义交换机 路由-->
+    <rabbit:direct-exchange name="amq.direct">
+        <rabbit:bindings>
+            <rabbit:binding key="key" queue="queue"/>
+        </rabbit:bindings>
+    </rabbit:direct-exchange>
+    <!--定义交换机 topic-->
+    <rabbit:topic-exchange name="topic" auto-declare="true" id="topicExchange">
+        <rabbit:bindings>
+            <rabbit:binding pattern="#" queue="queue"/>
+        </rabbit:bindings>
+    </rabbit:topic-exchange>
+    <!--定义rabbitTemplate-->
+    <!--监听器-->
+    <!--
+        acknowledge 签收模式 manual 手动签收
+        prefetch 同时拉取多少条消息
+    -->
+    <bean id="messageListener" class="com.kiss.springboot.rabbit.listener.MessageListener"/>
+    <rabbit:listener-container connection-factory="connectionFactory" acknowledge="manual"
+                               prefetch="2">
+        <rabbit:listener ref="messageListener" queue-names="queue"/>
+    </rabbit:listener-container>
+
+
+    <bean class="com.kiss.springboot.rabbit.listener.InitBeanPostProcessor"/>
+    <bean id="producer" class="com.kiss.springboot.rabbit.component.Producer"/>
+    <rabbit:template id="rabbitTemplate" connection-factory="connectionFactory"/>
+
+
+    <!--==========================死信+ttl===========================================-->
+    <!--exchange-->
+    <rabbit:topic-exchange name="exchange_dlx" id="exchange_dlx" auto-declare="true">
+        <rabbit:bindings>
+            <rabbit:binding pattern="dlx.#" queue="queue_dlx"/>
+        </rabbit:bindings>
+    </rabbit:topic-exchange>
+    <!--dlx-->
+    <rabbit:queue id="queue_dlx" name="queue_dlx" auto-declare="true">
+        <rabbit:queue-arguments>
+            <!--设置死信队列交换机-->
+            <entry key="x-dead-letter-exchange" value="exchange_dlx_last"/>
+            <!--设置死信队列路由key-->
+            <entry key="x-dead-letter-routing-key" value="dlx.zhang"/>
+            <!--设置队列过期时间 ttl-->
+            <entry key="x-message-ttl" value="20000" value-type="java.lang.Integer"/>
+            <!--设置队列长度限制-->
+            <entry key="x-max-length" value="5" value-type="java.lang.Integer"/>
+        </rabbit:queue-arguments>
+    </rabbit:queue>
+    <!---->
+    <rabbit:queue id="queue_dlx_last" name="queue_dlx_last"/>
+    <rabbit:topic-exchange name="exchange_dlx_last" auto-declare="true">
+        <rabbit:bindings>
+            <rabbit:binding pattern="dlx.#" queue="queue_dlx_last"/>
+        </rabbit:bindings>
+    </rabbit:topic-exchange>
+    <!--==========================死信+ttl===========================================-->
+
+</beans>

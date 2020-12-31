@@ -1,0 +1,13 @@
+spring:
+  rabbitmq:
+    host: 49.232.166.207
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+
+#rocketmq配置
+rocketmq:
+  name-server: 49.232.166.207:9876
+  producer:
+    group: springboot

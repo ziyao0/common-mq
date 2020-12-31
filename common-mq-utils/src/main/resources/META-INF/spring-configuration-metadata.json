@@ -1,0 +1,62 @@
+{
+  "hints": [],
+  "groups": [
+    {
+      "sourceType": "com.kiss.config.RabbitConfig",
+      "name": "RabbitConfig",
+      "type": "com.kiss.config.RabbitConfig"
+    },
+    {
+      "sourceType": "com.kiss.config.RocketConfig",
+      "name": "RocketConfig",
+      "type": "com.kiss.config.RocketConfig"
+    },
+    {
+      "sourceType": "com.kiss.config.MqConfig",
+      "name": "MqConfig",
+      "type": "com.kiss.config.MqConfig"
+    }
+  ],
+  "properties": [
+    {
+      "sourceType": "com.kiss.config.MqConfig",
+      "name": "com.kiss.mq.mqType",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.kiss.config.MqConfig",
+      "name": "com.kiss.mq.prefix",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.kiss.config.RabbitConfig",
+      "name": "com.kiss.mq.rabbit.host",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.kiss.config.RabbitConfig",
+      "name": "com.kiss.mq.rabbit.port",
+      "type": "java.lang.Integer"
+    },
+    {
+      "sourceType": "com.kiss.config.RabbitConfig",
+      "name": "com.kiss.mq.rabbit.username",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.kiss.config.RabbitConfig",
+      "name": "com.kiss.mq.rabbit.password",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.kiss.config.RabbitConfig",
+      "name": "com.kiss.mq.rabbit.virtualHost",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.kiss.config.RocketConfig",
+      "name": "com.kiss.mq.rocket.nameSrvAddr",
+      "type": "java.lang.String"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <modules>
+        <module>common-mq-utils</module>
+        <module>common-mq-model</module>
+        <module>common-mq-springboot</module>
+        <module>common-mq-spring</module>
+        <module>common-mq-basics</module>
+    </modules>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.4.0</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+    <groupId>com.kiss</groupId>
+    <artifactId>common-mq</artifactId>
+    <version>${revision}</version>
+    <name>common-mq</name>
+    <description>MQ解决方法</description>
+
+    <packaging>pom</packaging>
+    <properties>
+        <java.version>1.8</java.version>
+        <revision>0.0.1-SNAPSHOT</revision>
+    </properties>
+
+    <build>
+        <plugins>
+<!--            &lt;!&ndash;发布代码Jar插件&ndash;&gt;-->
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-deploy-plugin</artifactId>-->
+<!--            </plugin>-->
+<!--            &lt;!&ndash;发布源码插件&ndash;&gt;-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <version>1.2.5</version>
+            </plugin>
+        </plugins>
+    </build>
+</project>
