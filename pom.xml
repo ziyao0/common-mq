@@ -19,7 +19,7 @@
     <artifactId>common-mq</artifactId>
     <version>${revision}</version>
     <name>common-mq</name>
-    <description>MQ解决方法</description>
+    <description>MQ解决方案</description>
 
     <packaging>pom</packaging>
     <properties>

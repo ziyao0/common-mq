@@ -11,5 +11,5 @@ public interface MessageQueueClient {
      * @param topic    发送主题
      * @param messages 消息内容
      */
-    public void send(String topic, byte[] messages);
+    public void send(String topic, Object messages);
 }

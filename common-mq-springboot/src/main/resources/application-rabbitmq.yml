@@ -1,0 +1,9 @@
+spring:
+  rabbitmq:
+    host: 49.232.166.207
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+    publisher-returns: true
+    publisher-confirm-type: correlated

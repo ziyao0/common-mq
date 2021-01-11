@@ -127,7 +127,7 @@ public class RabbitConfig {
      * 参数二：是否持久化
      * 参数三：是否独占
      * 参数四：是否自动删除
-     * 参数五：参数 {@link java.util.Map}
+     * 参数五：参数 {@link Map}
      *
      * @return 返回queue
      */
@@ -153,7 +153,7 @@ public class RabbitConfig {
      * 参数二：绑定类型
      * 参数三：交换机名称
      * 参数四：路由key
-     * 参数五：其他参数 {@link java.util.Map}
+     * 参数五：其他参数 {@link Map}
      *
      * @return {@link Binding}
      */

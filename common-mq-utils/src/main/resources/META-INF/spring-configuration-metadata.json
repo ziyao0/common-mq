@@ -30,27 +30,27 @@
     },
     {
       "sourceType": "com.kiss.config.RabbitConfig",
-      "name": "com.kiss.mq.rabbit.host",
+      "name": "com.kiss.mq.rabbitmq.host",
       "type": "java.lang.String"
     },
     {
       "sourceType": "com.kiss.config.RabbitConfig",
-      "name": "com.kiss.mq.rabbit.port",
+      "name": "com.kiss.mq.rabbitmq.port",
       "type": "java.lang.Integer"
     },
     {
       "sourceType": "com.kiss.config.RabbitConfig",
-      "name": "com.kiss.mq.rabbit.username",
+      "name": "com.kiss.mq.rabbitmq.username",
       "type": "java.lang.String"
     },
     {
       "sourceType": "com.kiss.config.RabbitConfig",
-      "name": "com.kiss.mq.rabbit.password",
+      "name": "com.kiss.mq.rabbitmq.password",
       "type": "java.lang.String"
     },
     {
       "sourceType": "com.kiss.config.RabbitConfig",
-      "name": "com.kiss.mq.rabbit.virtualHost",
+      "name": "com.kiss.mq.rabbitmq.virtualHost",
       "type": "java.lang.String"
     },
     {

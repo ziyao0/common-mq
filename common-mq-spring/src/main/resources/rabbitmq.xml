@@ -51,15 +51,15 @@
         acknowledge 签收模式 manual 手动签收
         prefetch 同时拉取多少条消息
     -->
-    <bean id="messageListener" class="com.kiss.springboot.rabbit.listener.MessageListener"/>
+    <bean id="messageListener" class="com.kiss.spring.rabbit.listener.MessageListener"/>
     <rabbit:listener-container connection-factory="connectionFactory" acknowledge="manual"
                                prefetch="2">
         <rabbit:listener ref="messageListener" queue-names="queue"/>
     </rabbit:listener-container>
 
 
-    <bean class="com.kiss.springboot.rabbit.listener.InitBeanPostProcessor"/>
-    <bean id="producer" class="com.kiss.springboot.rabbit.component.Producer"/>
+    <bean class="com.kiss.spring.rabbit.listener.InitBeanPostProcessor"/>
+    <bean id="producer" class="com.kiss.spring.rabbit.component.Producer"/>
     <rabbit:template id="rabbitTemplate" connection-factory="connectionFactory"/>
 
 

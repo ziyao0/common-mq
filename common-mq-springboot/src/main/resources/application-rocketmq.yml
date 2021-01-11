@@ -1,0 +1,5 @@
+#rocketmq配置
+rocketmq:
+  name-server: 49.232.166.207:9876
+  producer:
+    group: springboot

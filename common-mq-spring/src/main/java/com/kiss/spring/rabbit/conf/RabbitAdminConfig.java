@@ -82,6 +82,5 @@ public class RabbitAdminConfig implements InitializingBean {
                 , createExchange("dlx.exchange.last.admin", WorkMode.topic)
                 , "dlx.#"
                 , null));
-
     }
 }

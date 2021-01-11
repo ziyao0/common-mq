@@ -24,6 +24,18 @@
             - [批量消息](###批量消息)
             - [消息过滤](###消息过滤)
             - [acl权限控制](###acl权限控制)
+    - [Kafka使用](#Kafka使用)
+        - [简介](##简介)
+        - [kafka基本概念](##kafka基本概念)
+            - [kafka特性](###kafka特性)
+            - [kafka专业术语](###kafka专业术语)
+            - [kafka消费模型](###kafka消费模型)
+            - [Topic和log](###Topic和log)
+        - [Kafka高级特性](##Kafka高级特性)
+            - [日志分段存储😂](###日志分段存储😂)
+            - [Kafka Controller](###Kafka Controller)
+            - [Leader选举机制](###Leader选举机制)
+            - [Rebalance机制](###Rebalance机制)
 
 # 更新日志
 
@@ -37,6 +49,8 @@
 | v1.1.1 | rocketmq原生API案例 | 2020/12/30 | 张子尧 |
 | v1.1.2 | rocketmq集群环境搭建文档 | 2020/12/31 | 张子尧 |
 | v1.1.3 | 编写rocketmq使用文档 | 2020/12/31 | 张子尧 |
+| v1.2.1 | 编写Kafka环境搭建文档 | 2021/1/2 | 张子尧 |
+| v1.2.2 | 编写Kafka说明文档 | 2021/1/4 | 张子尧 |
 
 # 项目背景
 
@@ -75,7 +89,10 @@
 - 应用解耦：提高系统容错性和可维护性
 - 异步提速：提升用户体验和系统吞吐量
 - 削峰填谷：提高系统稳定性
-  **MQ劣势**
+  <br>
+
+**MQ劣势**
+
 - 系统可用性降低：系统引入的外部依赖越多，系统稳定性越差。一旦 MQ 宕机，就会对业务造成影响。
 - 系统复杂度提高： MQ的加入大大增加了系统的复杂度，以前系统间是同步的远程调用，现在是通过 MQ 进行异步调用。
 
@@ -171,8 +188,6 @@ public class Producer {
 - 延迟队列实现原理：通过ttl和dlx的特性可以设置两个对列，创建监听器监听死信队列，实现延迟队列。
 
 **实现架构图**
-
-####
 
 ![img.png](doc/images/ttl+dlx.png)
 <br>
@@ -415,5 +430,144 @@ Message message=new Message("Delay","tag","延迟消息！！！".getBytes());
  */
 ```
 
+## rocketmq配置解读
+
+|         参数名          |          默认值           | 说明                                                         |
+| :---------------------: | :-----------------------: | ------------------------------------------------------------ |
+|       namesrvAddr       |           null            | nameserver地址                                               |
+|       listenPort        |           10911           | 接受客户端连接的监听端口                                     |
+|        brokerIP1        |      默认网卡ip地址       | 当前broker监听地址                                           |
+|        brokerIP2        |      默认网卡ip地址       | 从节点broker监听地址                                         |
+|       brokerName        |           null            | broker名称                                                   |
+|    brokerClusterName    |      DefaultCluster       | 集群名称                                                     |
+|        brokerId         |             0             | brokerId，master为0，其他数值都为salve节点                   |
+|       brokerRole        |       ASYNC_MASTER        | Broker的角色：SYNC_MASTER(同步双写)/ASYNC_MASTER(异步复制)/SLAVE |
+|       deleteWhen        |            04             | 删除文件时间点，默认凌晨4点                                  |
+|      flushDiskType      |        ASYNC_FLUSH        | 刷盘方式：ASYNC_FLUSH异步刷盘/SYNC_FLUSH同步刷盘             |
+|  storePathConsumeQueue  | $HOME/store/consumequeue/ | 存储 consume queue 的路径                                    |
+|   storePathCommitLog    |  $HOME/store/commitlog/   | 存储 commit log 的路径                                       |
+| mappedFileSizeCommitLog |    1024 * 1024 * 1024     | commit log 的映射文件大小1G                                  |
+|   fifileReservedTime    |            72             | 以小时计算的文件保留时间                                     |
+
 # Kafka使用
 
+## 简介
+
+**Kafka**是最初由Linkedin公司开发，是一个*分布式*、*分区的*、*多副本的*、*多订阅者*，基于**zookeeper**协调的分布式日志系统（也可以当做MQ系统），常见可以用于web/nginx日志、访问日志，消息服务，大数据场景等等，Linkedin于2010年贡献给了Apache基金会并成为顶级开源项目。
+
+kafka设计目标：
+
+- 以时间复杂度为O(1)的方式提供消息持久化能力，即使对TB级以上数据也能保证常数时间的访问性能
+- 高吞吐率。即使在非常廉价的商用机器上也能做到单机支持每秒100K条消息的传输
+- 支持kafka server间的消息分区，及分布式消费，保证每个partition内的消息顺序传输
+- 同时支持离线数据处理和实时数据处理
+- 支持线上水平扩展
+
+kafka常见的使用场景：
+
+- 日志收集：kafka适应收集各服务的日志，常见的有hadoop、hbase等
+- 消息系统：消息系统解耦、缓存消息等
+- 用户轨迹跟踪：记录用户活动轨迹。比如说浏览、搜索，点击等，通过记录用户的活动轨迹做用户行为分析等
+
+## kafka基本概念
+
+### kafka特性
+
+kafka包含传统消息中间件的特性，具有单播/多播两种常见的消费模型。kafka高度依赖文件系统来做存储和消息缓存，所以说kafka消息是会*持久化*到磁盘上的，这点和其他中间件有些不同，kafka不会在consumer消费完消息后丢弃消息，而是用offset来管理要消费的消息。对于kafka来说*高吞吐量*是它的主要优势，kafka将数据写到磁盘，充分利用了磁盘的顺序读写。同时在数据写入和数据同步时采用了零拷贝技术采用了sendFile()函数调用，完全是在内核中操作，从而避免了内核缓冲区与用户缓冲区之间数据的拷贝，操作效率极高。还有它的***可扩展性***、***多客户端支持***、***安全机制***、***数据备份***、***轻量***、***消息积压***等。
+
+#### kafka整体架构
+
+![img.png](doc/images/kafka架构图.png)
+### kafka专业术语
+
+| 名称               | 说明                                                         |
+| ------------------ | ------------------------------------------------------------ |
+| **Broker**         | 中间件服务节点，一个kafka节点就相当于一个broker              |
+| **Topic**          | topic是kafka对于消息的一种逻辑归类，每一条消息都要指定一个topic |
+| **Partition**      | topic是kafka的一个逻辑概念，而partition则是kafka的一种物理分区概念，一个topic最少包含一个partition，而且在partition中消息时有序的 |
+| **Producer**       | 消息生产者，向broker发送消息的客户端                         |
+| **Consumer Group** | 消费组，每个消费者都属于一个消费组                           |
+| **Consumer**       | 消费者，从broker读取消息的客户端                             |
+
+### kafka消费模型
+
+kafka和其他消息中间件有相同的消息消费模型，具有单播（点对点）/多播（发布订阅）模式
+
+- 单播消费：kafka中一条消息只能被同一个消费组下的一个消费者消费，所以单播模式只需要把消费者放到共一个消费组下即可实现单播
+- 多播消费：针对kafka同一条消息只能被同一个消费组下的一个消费者的特性，至于要保证消费者不在一个消费组中即可实现多播的消费模型
+
+### Topic和log
+
+在kafka中**Topic**是一个消息的必备属性，每一条消息都会通过**Topic**指定发送，Topic在kafka中可以理解为一类消息的别称，在Topic下有一个或多个**Partition**的物理分区，在一个partition中消息是可以保证**顺序**的。
+
+<br>
+
+![img.png](doc/images/kafkaTopic.png)
+
+在kafka中partition是一个有序的消息队列，producer会把消息发送到partition中，消息会按照顺序添加到对应partition的**commit log**文件中，消息在partition中都会有一个唯一的办好**offset**，是用来标识partition中的message。
+
+在Topic下每一个**partition**都对应一个**commit log**文件，而在同一个**partition**中**offset**是唯一的message标识。
+
+kafka一般不会删除消息，不管消息有没有被消费掉，只会根据配置的保留时间来确认消息多久后会被删除，kafka默认消息保存一周后会被删除，而且kafka的性能和消息的数据量大小没有关系，因此保留大量的数据 消息对系统性能不会有什么影响。
+
+在consumer中，**consumer**是基于自己在commit log中的**offset**来进行消息消费的，而且offset是由消费者自己来维护的，消费者可以自己指定从什么位置开始消费消息，所以这意味消费者对于集群的性能影响是非常小的。
+
+总的来说，**Topic**是一个逻辑上的语文数据集，比如相同的业务数据可以使用一个topic，用户相关的操作日志可以用同一个topic等。而partition则是对数据做一个物理分区，比如某一日志数据量很大的时候我们可以利用分区的原理把数据分别存放在不用的机器上。**Broker**可以看做kafka的一个进程，一个kafka节点就相当于一个broker。
+
+## Kafka高级特性
+
+### 日志分段存储😂
+
+在kafka中一个分区的消息数据对应存储在一个文件夹下，命名方式以topic名称+分区号命名。而消息在分区内也是分段存储的，有利的是方便旧的消息可以很快删除。kafka规定一个分段文件大小为1g，目的是为了方便发log文件加载到内存中去操作。
+
+```sh
+#文件命名是以log文件中第一个offset命名的比如offset为0，则命名为00000000000000000000.log
+#kafka每次往分区发4k消息就会记录一条当前消息的offset到index文件中，快速定位消息会先到
+#index文件中快速定位，然后再到log文件中去找具体的消息
+-rw-r--r-- 1 root root 10485760 1月   5 14:59 00000000000000000000.index #索引存储文件 
+#消息存储日志文件，主要存储offset和消息体
+-rw-r--r-- 1 root root 13667641 1月   5 14:59 00000000000000000000.log #消息日志存储文件
+#和index文件一样，每发送4k就会记录一条当前消息的时间戳和offset
+-rw-r--r-- 1 root root 10485756 1月   5 14:59 00000000000000000000.timeindex #消息时间存储文件
+-rw-r--r-- 1 root root        8 1月   5 10:11 leader-epoch-checkpoint
+```
+
+### Kafka Controller
+
+#### Controller概述
+
+在kafka集群中，每一个kafka节点都是一个broker，而其中一个broker会被选举为**Kafka Controller**（总控制器），Controller负责管理整个集群中所有的分区和副本状态。
+
+- 当某个分区的leader出现故障时，由Controller负责选举出新的leader副本。
+- 当检测出某个分区的isr发生变化时，由Controller负责通知所有broker更新元数据。
+- 当topic添加新的partition时，由Controller负责通知新的partition被其他节点感知。
+
+#### Controller选举机制
+
+在kafka集群启动时，每个broker都会向zookeeper发起一条 **create -e /controller**命令创建一个/controller临时节点，zookeeper会保证有且仅有一个broker会创建成功，而这个节点会成为kafka的总控制器Controller。当总控制器宕机或因为其他因素导致无法正常工作时，此时zookeeper的/controller临时节点会消息，而其他broker通过watcher感知到后会重新发起创建命令，而新创建成功的broker会被选举为新的controller。
+
+### Leader选举机制
+
+**Kafka Controller**感知到**Leader**分区所在的broker宕机后会从**isr**中选第一个为新的**Leader**，如果第一个也挂了，则会选择第二个，以此类推。当unclean.leader.election.enable为true=时代表当isr全部挂了之后可以在isr以外的副本中选举出新的leader，这种配置可以提高集群的可用性，但带来的问题是会出现消息丢失的情况。
+
+### Rebalance机制
+
+**Rebalance**策略：**range**、**round-robin**、**sticky**。
+
+Kafka通过partition.assignment.strategy参数来设置消费者与订阅主题之间的分区分配策略，默认情况下为range。
+
+- range：先按照分区序号排序，假设 n＝分区数／消费者数量 = 3， m＝分区数%消费者数量 = 1，那么前 m 个消费者每个分配 n+1 个分区，后面的（消费者数量－m ）个消费者每个分配 n 个分区。
+
+- round-robin：轮询分配。
+
+- sticky：初始时分配策略与round-robin类似，但是在rebalance的时候，需要保证如下两个原则。
+
+  1）分区的分配要尽可能均匀 。
+
+  2）分区的分配尽可能与上次分配的保持相同。
+
+  当两者发生冲突时，第一个目标优先于第二个目标 。这样可以最大程度维持原来的分区分配的策略。
+
+### zookeeper节点分布图
+
+![](doc/images/kafka节点信息图.png)

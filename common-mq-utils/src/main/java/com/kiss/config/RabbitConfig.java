@@ -11,8 +11,8 @@ import org.springframework.context.annotation.Configuration;
  * @author zhangziyao
  */
 @Configuration
-@ConditionalOnProperty(prefix = "com.kiss.mq.mqType", havingValue = "rabbit")
-@ConfigurationProperties(prefix = "com.kiss.mq.rabbit")
+@ConditionalOnProperty(prefix = "com.kiss.mq.mqType", havingValue = "rabbitmq")
+@ConfigurationProperties(prefix = "com.kiss.mq.rabbitmq")
 @Data
 @NoArgsConstructor
 @ToString
@@ -20,11 +20,13 @@ public class RabbitConfig {
 
     private String host;
 
-    private Integer port;
+    private int port;
 
     private String username;
 
     private String password;
 
-    private String virtualHost;
+    private String virtualHost = "/";
+
+    private Integer maxChannel = 30000;
 }

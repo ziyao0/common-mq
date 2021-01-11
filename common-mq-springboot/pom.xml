@@ -28,6 +28,12 @@
             <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
         <!--rabbitmq-->
+        <!--kafka-->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+        <!--kafka-->
         <dependency>
             <groupId>org.apache.rocketmq</groupId>
             <artifactId>rocketmq-spring-boot-starter</artifactId>
